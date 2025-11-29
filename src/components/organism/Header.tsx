@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { Logo } from '../atom/Logo';
 
 interface HeaderProps {
   title?: string;
@@ -33,9 +34,13 @@ export const Header: React.FC<HeaderProps> = ({
               </svg>
             </Link>
           )}
-          <Link href="/" className="text-xl font-bold text-[#00a651]">
-            {title}
-          </Link>
+          {!showBack ? (
+            <Link href="/">
+              <Logo size="sm" />
+            </Link>
+          ) : (
+            <span className="text-xl font-bold text-[#00a651]">{title}</span>
+          )}
         </div>
         {rightAction && <div>{rightAction}</div>}
       </div>

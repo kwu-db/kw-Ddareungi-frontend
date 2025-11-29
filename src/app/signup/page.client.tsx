@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card } from "@/components/atom/Card";
 import { Button } from "@/components/atom/Button";
 import { FormField } from "@/components/molecule/FormField";
@@ -144,6 +145,15 @@ export default function SignupPageClient() {
             {createUserMutation.isPending ? "가입 중..." : "회원가입"}
           </Button>
         </form>
+
+        <div className="mt-4 text-center">
+          <Link
+            href="/login"
+            className="text-sm text-[#00a651] hover:underline"
+          >
+            이미 계정이 있으신가요? 로그인
+          </Link>
+        </div>
       </Card>
     </div>
   );

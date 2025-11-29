@@ -23,9 +23,9 @@ export default function MyPageClient() {
       const storedUserId = localStorage.getItem("userId");
       const storedEmail = localStorage.getItem("userEmail");
 
-      // 토큰이나 유저 ID가 없으면 회원가입 페이지로 이동
+      // 토큰이나 유저 ID가 없으면 로그인 페이지로 이동
       if (!token || !storedUserId) {
-        router.push("/signup");
+        router.push("/login");
         return;
       }
 

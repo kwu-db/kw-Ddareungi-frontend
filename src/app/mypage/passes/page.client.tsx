@@ -35,17 +35,36 @@ export default function PassesPageClient() {
 
   // API 응답 형식에 맞게 변환
   const passList =
-    userPasses?.map((pass) => ({
-      id: pass.userPassId,
-      type: pass.passType === "ONE_DAY" ? "1DAY" :
-            pass.passType === "SEVEN_DAY" ? "7DAY" :
-            pass.passType === "THIRTY_DAY" ? "30DAY" : "ANNUAL",
-      price: pass.price,
-      activatedAt: pass.activatedDate,
-      expiredAt: pass.expiredDate,
-      status: pass.status === "ACTIVATE" ? "ACTIVE" :
-              pass.status === "EXPIRED" ? "EXPIRED" : "CANCELED",
-    })) || [];
+    userPasses?.map((pass) => {
+      let passType: "ANNUAL" | "1DAY" | "7DAY" | "30DAY";
+      if (pass.passType === "ONE_DAY") {
+        passType = "1DAY";
+      } else if (pass.passType === "SEVEN_DAY") {
+        passType = "7DAY";
+      } else if (pass.passType === "THIRTY_DAY") {
+        passType = "30DAY";
+      } else {
+        passType = "ANNUAL";
+      }
+
+      let status: "ACTIVE" | "EXPIRED" | "CANCELED";
+      if (pass.status === "ACTIVATE") {
+        status = "ACTIVE";
+      } else if (pass.status === "EXPIRED") {
+        status = "EXPIRED";
+      } else {
+        status = "CANCELED";
+      }
+
+      return {
+        id: pass.userPassId,
+        type: passType,
+        price: pass.price,
+        activatedAt: pass.activatedDate,
+        expiredAt: pass.expiredDate,
+        status: status,
+      };
+    }) || [];
 
   return (
     <PassList

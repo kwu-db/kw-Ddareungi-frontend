@@ -44,13 +44,6 @@ export default function MyPageClient() {
 
   const isLoading = passesLoading || rentalsLoading || isChecking;
 
-  const { data: userPasses, isLoading: passesLoading } = useUserPasses();
-  const { data: userRentals, isLoading: rentalsLoading } = useUserRentals(
-    userId || 0
-  );
-
-  const isLoading = passesLoading || rentalsLoading || isChecking;
-
   // 유저가 없으면 로딩 표시 (리다이렉트 중)
   if (isChecking || !userId) {
     return (

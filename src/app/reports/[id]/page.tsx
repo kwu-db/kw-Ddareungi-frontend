@@ -11,12 +11,20 @@ interface ReportDetailPageProps {
 
 export default function ReportDetailPage({ params }: ReportDetailPageProps) {
   // 더미 데이터
-  const report = {
+  const report: {
+    id: number;
+    stationName: string;
+    bikeNum: string;
+    description: string;
+    status: 'PENDING' | 'IN_PROGRESS' | 'RESOLVED';
+    createdAt: string;
+    reporter: string;
+  } = {
     id: parseInt(params.id),
     stationName: '강남역 10번 출구',
     bikeNum: 'BIKE-002',
     description: '체인에서 이상한 소음이 발생합니다. 사용 시 주의가 필요합니다.',
-    status: 'PENDING' as const,
+    status: 'PENDING',
     createdAt: '2025-01-10 10:00',
     reporter: '홍길동',
   };

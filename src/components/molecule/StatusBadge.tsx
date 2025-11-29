@@ -10,7 +10,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   status,
   type = 'report',
 }) => {
-  const getStatusConfig = () => {
+  const getStatusConfig = (): { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' } => {
     if (type === 'report') {
       const configs: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }> = {
         PENDING: { label: '대기 중', variant: 'warning' },

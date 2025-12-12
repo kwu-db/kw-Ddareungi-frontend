@@ -1,19 +1,33 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BoardList } from "@/components/organism/BoardList";
-import { useBoards } from "@/hooks/useBoards";
+import { BoardFormModal } from "@/components/organism/BoardFormModal";
+import { useBoards, useCreateBoard } from "@/hooks/useBoards";
 
 export default function BoardPageClient() {
   const router = useRouter();
   const { data: boardsData, isLoading, error } = useBoards();
+  const createBoardMutation = useCreateBoard();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleBoardClick = (id: number) => {
     router.push(`/board/${id}`);
   };
 
   const handleCreateClick = () => {
-    alert("글쓰기 기능은 추후 구현 예정입니다.");
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateSubmit = async (data: any) => {
+    try {
+      await createBoardMutation.mutateAsync(data);
+      alert("게시글이 작성되었습니다.");
+    } catch (err) {
+      alert("게시글 작성 실패: " + (err instanceof Error ? err.message : "알 수 없는 오류"));
+      throw err;
+    }
   };
 
   if (isLoading) {
@@ -46,11 +60,19 @@ export default function BoardPageClient() {
     })) || [];
 
   return (
-    <BoardList
-      boards={boards}
-      onBoardClick={handleBoardClick}
-      onCreateClick={handleCreateClick}
-    />
+    <>
+      <BoardList
+        boards={boards}
+        onBoardClick={handleBoardClick}
+        onCreateClick={handleCreateClick}
+      />
+      <BoardFormModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateSubmit}
+        mode="create"
+      />
+    </>
   );
 }
 

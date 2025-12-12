@@ -2,13 +2,14 @@ import { MainLayout } from "@/components/template/MainLayout";
 import StationDetailPageClient from "./page.client";
 
 interface StationDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function StationDetailPage({ params }: StationDetailPageProps) {
-  const stationId = parseInt(params.id);
+export default async function StationDetailPage({ params }: StationDetailPageProps) {
+  const { id } = await params;
+  const stationId = parseInt(id);
 
   return (
     <MainLayout title="대여소 상세" showBack>

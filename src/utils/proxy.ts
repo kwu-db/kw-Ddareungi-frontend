@@ -7,21 +7,11 @@ export type Route<
   //   params: { [s in string]: string | string[] };
   // }
 > = (request: T, context?: any) => Promise<U>;
-export type Middleware<
-  T extends Request = Request,
-  U extends Response = Response
-> = (next: Route<T, U>) => Route<T, U>;
+export type Middleware<T extends Request = Request, U extends Response = Response> = (next: Route<T, U>) => Route<T, U>;
 
-const requestLogger = (
-  request: NextRequest,
-  response: NextResponse,
-  duration: number,
-  exceptStatus?: number[]
-) => {
+const requestLogger = (request: NextRequest, response: NextResponse, duration: number, exceptStatus?: number[]) => {
   if (exceptStatus?.includes(response.status)) return;
-  console.log(
-    `${request.method} ${request.nextUrl.pathname} ${response.status} in ${duration}ms`
-  );
+  console.log(`${request.method} ${request.nextUrl.pathname} ${response.status} in ${duration}ms`);
 };
 
 export function requestLoggerMiddleware(
@@ -33,12 +23,7 @@ export function requestLoggerMiddleware(
     const start = Date.now();
     const response = await next(request, context);
     const responseClone = new NextResponse(response.body, response);
-    requestLogger(
-      requestClone,
-      responseClone,
-      Date.now() - start,
-      exceptStatus
-    );
+    requestLogger(requestClone, responseClone, Date.now() - start, exceptStatus);
     return response;
   };
 }
@@ -46,8 +31,7 @@ const toNextResponse = async (response: Response) => {
   if (response instanceof NextResponse) return response;
   if (response.status === 204) return new NextResponse(null, { status: 204 });
   const contentType = response.headers.get("Content-Type")?.toLowerCase();
-  if (!contentType)
-    return new NextResponse("No `Content-Type` on headers", { status: 500 });
+  if (!contentType) return new NextResponse("No `Content-Type` on headers", { status: 500 });
   const textCase =
     contentType.includes("text/html") ||
     contentType.includes("text/plain") ||
@@ -148,19 +132,15 @@ export const createReverseProxy = (
     handleResponse: undefined,
   }
 ) => {
-  const proxyOrigin: Route<NextRequest, NextResponse> = async (
-    request: NextRequest
-  ) => {
+  const proxyOrigin: Route<NextRequest, NextResponse> = async (request: NextRequest) => {
     handleError =
       handleError ||
-      ((e) => {
+      (e => {
         console.error(e);
         return new NextResponse("Error", { status: 500 });
       });
     const { nextUrl, method } = request;
-    const pathname = pathReplace
-      ? nextUrl.pathname.replace(...pathReplace)
-      : nextUrl.pathname;
+    const pathname = pathReplace ? nextUrl.pathname.replace(...pathReplace) : nextUrl.pathname;
     const search = nextUrl.search;
     const fullUri = origin + pathname + search;
     const headers = createProxyHeader(request);
@@ -176,9 +156,7 @@ export const createReverseProxy = (
     return toNextResponse(response);
   };
   useRequestLogger = useRequestLogger != false;
-  const proxy = useRequestLogger
-    ? requestLoggerMiddleware(proxyOrigin)
-    : proxyOrigin;
+  const proxy = useRequestLogger ? requestLoggerMiddleware(proxyOrigin) : proxyOrigin;
 
   console.log(`[Reverse Proxy Util] Created a reverse proxy for ${origin}`);
   const exportObject = {
@@ -193,17 +171,26 @@ export const createReverseProxy = (
   return exportObject;
 };
 
-export const createProxyHeader = (requestLike: {
-  headers: Headers;
-  cookies: { toString: () => string };
-}) => {
+export const createProxyHeader = (requestLike: { headers: Headers; cookies: { toString: () => string } }) => {
   const headers = new Headers();
-  const contentType = requestLike.headers.get("Content-Type");
-  const xForwardedFor = requestLike.headers.get("X-Forwarded-For");
-  const userAgents = requestLike.headers.get("User-Agent");
-  if (contentType) headers.set("Content-Type", contentType);
-  if (userAgents) headers.append("User-Agent", userAgents);
-  if (xForwardedFor) headers.append("X-Forwarded-For", xForwardedFor);
+
+  // 모든 헤더를 복사 (일부 제외)
+  const excludeHeaders = [
+    "host",
+    "connection",
+    "content-length", // body를 다시 읽으므로 길이가 달라질 수 있음
+    "transfer-encoding",
+  ];
+
+  requestLike.headers.forEach((value, key) => {
+    const lowerKey = key.toLowerCase();
+    if (!excludeHeaders.includes(lowerKey)) {
+      headers.append(key, value);
+    }
+  });
+
+  // Cookie는 별도로 처리
   headers.append("Cookie", requestLike.cookies.toString());
+
   return headers;
 };

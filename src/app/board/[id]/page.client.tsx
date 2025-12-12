@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { BoardDetail } from "@/components/organism/BoardDetail";
+import { BoardFormModal } from "@/components/organism/BoardFormModal";
 import {
   useBoard,
   useComments,
@@ -18,14 +21,26 @@ export default function BoardDetailPageClient({
   boardId,
   isAuthor,
 }: BoardDetailPageClientProps) {
+  const router = useRouter();
   const { data: board, isLoading: boardLoading, error: boardError } = useBoard(boardId);
   const { data: comments, isLoading: commentsLoading } = useComments(boardId);
   const createCommentMutation = useCreateComment();
   const updateBoardMutation = useUpdateBoard();
   const deleteBoardMutation = useDeleteBoard();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleEdit = () => {
-    alert("수정 기능은 추후 구현 예정입니다.");
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (data: any) => {
+    try {
+      await updateBoardMutation.mutateAsync({ boardId, data });
+      alert("게시글이 수정되었습니다.");
+    } catch (err) {
+      alert("게시글 수정 실패: " + (err instanceof Error ? err.message : "알 수 없는 오류"));
+      throw err;
+    }
   };
 
   const handleDelete = async () => {
@@ -33,7 +48,7 @@ export default function BoardDetailPageClient({
       try {
         await deleteBoardMutation.mutateAsync(boardId);
         alert("삭제되었습니다.");
-        // 페이지 이동은 상위에서 처리
+        router.push("/board");
       } catch (err) {
         alert("삭제 실패: " + (err instanceof Error ? err.message : "알 수 없는 오류"));
       }
@@ -85,23 +100,38 @@ export default function BoardDetailPageClient({
     })) || [];
 
   return (
-    <BoardDetail
-      board={{
-        id: board.boardId,
-        title: board.title,
-        content: board.content,
-        author: board.userName,
-        boardType: board.boardType,
-        createdAt: board.createdDate,
-        modifiedAt: board.lastModifiedDate,
-      }}
-      comments={commentList}
-      isAuthor={isAuthor}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      onCommentSubmit={handleCommentSubmit}
-      onCommentDelete={handleCommentDelete}
-    />
+    <>
+      <BoardDetail
+        board={{
+          id: board.boardId,
+          title: board.title,
+          content: board.content,
+          author: board.userName,
+          boardType: board.boardType,
+          createdAt: board.createdDate,
+          modifiedAt: board.lastModifiedDate,
+        }}
+        comments={commentList}
+        isAuthor={isAuthor}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onCommentSubmit={handleCommentSubmit}
+        onCommentDelete={handleCommentDelete}
+      />
+      {board && (
+        <BoardFormModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleEditSubmit}
+          initialData={{
+            title: board.title,
+            content: board.content,
+            boardType: board.boardType,
+          }}
+          mode="edit"
+        />
+      )}
+    </>
   );
 }
 

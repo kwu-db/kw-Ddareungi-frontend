@@ -4,12 +4,13 @@ import { Badge } from '@/components/atom/Badge';
 import { Button } from '@/components/atom/Button';
 
 interface ReportDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function ReportDetailPage({ params }: ReportDetailPageProps) {
+export default async function ReportDetailPage({ params }: ReportDetailPageProps) {
+  const { id } = await params;
   // 더미 데이터
   const report: {
     id: number;
@@ -20,7 +21,7 @@ export default function ReportDetailPage({ params }: ReportDetailPageProps) {
     createdAt: string;
     reporter: string;
   } = {
-    id: parseInt(params.id),
+    id: parseInt(id),
     stationName: '강남역 10번 출구',
     bikeNum: 'BIKE-002',
     description: '체인에서 이상한 소음이 발생합니다. 사용 시 주의가 필요합니다.',

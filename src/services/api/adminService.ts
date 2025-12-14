@@ -13,6 +13,19 @@ interface UserInfoResponse {
   role: string;
 }
 
+interface User {
+  userId: number;
+  username: string;
+  name: string;
+  email: string;
+  role: "USER" | "ADMIN";
+  createdDate: string;
+}
+
+interface StationsCountResponse {
+  count: number;
+}
+
 /**
  * 관리자 계정 생성
  */
@@ -84,11 +97,63 @@ async function getUserInfo(email: string): Promise<ToApi<UserInfoResponse>> {
   return response.json();
 }
 
+/**
+ * 회원 목록 조회
+ * 내부 API를 직접 호출
+ */
+async function getUsers(): Promise<ToApi<User[]>> {
+  const url = `/api/admin/users`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({
+      status: "error",
+      statusCode: response.status,
+      message: response.statusText,
+    }));
+    throw error;
+  }
+
+  return response.json();
+}
+
+/**
+ * 대여소 개수 조회
+ * 내부 API를 직접 호출
+ */
+async function getStationsCount(): Promise<ToApi<StationsCountResponse>> {
+  const url = `/api/admin/stations/count`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({
+      status: "error",
+      statusCode: response.status,
+      message: response.statusText,
+    }));
+    throw error;
+  }
+
+  return response.json();
+}
+
 const adminService = {
   createAdmin,
   updateAdmin,
   checkAdmin,
   getUserInfo,
+  getUsers,
+  getStationsCount,
 };
 
 export default adminService;

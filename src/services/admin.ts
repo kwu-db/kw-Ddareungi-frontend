@@ -1,9 +1,23 @@
 import { repository } from "mysql2-wizard";
 
-const repo = repository({
+interface User {
+  userId: number;
+  username: string;
+  name: string;
+  email: string;
+  role: "USER" | "ADMIN";
+  createdDate: Date;
+}
+
+const repo = repository<User>({
   table: "users",
-  keys: ["userId", "email", "role"],
+  keys: ["userId", "username", "name", "email", "role", "createdDate"],
 });
+
+async function read() {
+  const results = await repo.select();
+  return results;
+}
 
 async function authenticate(email: string): Promise<boolean> {
   const admin = await repo.selectOne({ email, role: "ADMIN" });
@@ -24,6 +38,7 @@ async function getUserByEmail(email: string): Promise<{ userId: number; email: s
 
 const adminService = {
   authenticate,
+  read,
   getUserByEmail,
 };
 export default adminService;

@@ -50,3 +50,20 @@ export function useCheckAdmin(email: string | null, enabled: boolean = true) {
     staleTime: 5 * 60 * 1000, // 5분간 캐시 유지
   });
 }
+
+/**
+ * 대여소 개수 조회 훅
+ */
+export function useStationsCount() {
+  return useQuery({
+    queryKey: ["admin", "stations", "count"],
+    queryFn: async () => {
+      const response = await adminService.getStationsCount();
+      if (response.status === "success") {
+        return response.data.count;
+      }
+      throw new Error(response.message || "대여소 개수 조회 실패");
+    },
+    staleTime: 1 * 60 * 1000, // 1분간 캐시 유지
+  });
+}

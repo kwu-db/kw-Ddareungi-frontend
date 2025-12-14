@@ -10,11 +10,13 @@ import { useTimeRankings, useCountRankings, useRentals } from "@/hooks/useRental
 import { useUserPasses } from "@/hooks/usePasses";
 import { useAuthStore } from "@/stores/authStore";
 import { PassCard } from "@/components/molecule/PassCard";
+import { useStationsCount } from "@/hooks/useAdmin";
 
 export default function HomePageClient() {
   const router = useRouter();
   const { userId, isAuthenticated } = useAuthStore();
   const { data: stations, isLoading: stationsLoading } = useStations();
+  const { data: stationsCount } = useStationsCount();
   const { data: boardsData, isLoading: boardsLoading } = useBoards({ page: 0, size: 5 }, undefined, undefined);
   const { data: timeRankings } = useTimeRankings(5);
   const { data: countRankings } = useCountRankings(5);
@@ -56,7 +58,7 @@ export default function HomePageClient() {
   const activeRentals = rentals?.filter(rental => !rental.endTime || rental.status === "ACTIVE").length || 0;
 
   const quickStats = {
-    nearbyStations: stations?.length || 0,
+    nearbyStations: stationsCount || 0,
     newNotices: recentNotices.length,
     activeRentals: activeRentals,
   };
@@ -78,7 +80,7 @@ export default function HomePageClient() {
       <div className="grid grid-cols-3 gap-3">
         <Card className="p-4 text-center bg-gradient-to-br from-[#00a651]/10 to-[#00a651]/5 border-[#00a651]/20">
           <div className="text-3xl font-bold text-[#00a651] mb-1.5">{quickStats.nearbyStations}</div>
-          <div className="text-xs text-gray-600 font-medium">주변 대여소</div>
+          <div className="text-xs text-gray-600 font-medium">대여소 수</div>
         </Card>
         <Card className="p-4 text-center bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200/50">
           <div className="text-3xl font-bold text-blue-600 mb-1.5">{quickStats.activeRentals}</div>
@@ -171,7 +173,7 @@ export default function HomePageClient() {
       {recentStations.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">주변 대여소</h2>
+            <h2 className="text-xl font-bold text-gray-900">대여소</h2>
             <Link href="/stations" className="text-sm text-[#00a651] font-semibold hover:underline">
               전체보기 →
             </Link>

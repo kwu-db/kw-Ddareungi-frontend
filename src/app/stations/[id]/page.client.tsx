@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { StationDetail } from "@/components/organism/StationDetail";
 import { StationReportModal } from "@/components/organism/StationReportModal";
 import { useStation, useRentBike, useReturnBike } from "@/hooks";
+import { useRentals } from "@/hooks/useRentals";
 import { useCreateBoard } from "@/hooks/useBoards";
 import { useQueryClient } from "@tanstack/react-query";
 import { boardKeys } from "@/hooks/useBoards";
@@ -13,19 +14,34 @@ interface StationDetailPageClientProps {
   stationId: number;
 }
 
-export default function StationDetailPageClient({
-  stationId,
-}: StationDetailPageClientProps) {
+export default function StationDetailPageClient({ stationId }: StationDetailPageClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: station, isLoading, error } = useStation(stationId);
+  const { data: rentals, isLoading: rentalsLoading } = useRentals();
   const rentMutation = useRentBike();
   const returnMutation = useReturnBike();
   const createBoardMutation = useCreateBoard();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+  // 현재 사용자의 활성 대여 확인 (endTime이 없거나 status가 ACTIVE인 대여)
+  // /api/v1/rentals는 JWT 토큰 기반으로 현재 사용자의 대여만 반환한다고 가정
+  const activeRental = rentals?.find(rental => !rental.endTime || rental.status === "ACTIVE");
+
   const handleRent = async () => {
     try {
+      // 이미 대여 중인지 확인
+      if (activeRental) {
+        alert("이미 대여 중인 자전거가 있습니다. 먼저 반납해주세요.");
+        return;
+      }
+
+      // 대여소에 자전거가 있는지 확인
+      if (station && station.availableBikes === 0) {
+        alert("대여 가능한 자전거가 없습니다.");
+        return;
+      }
+
       await rentMutation.mutateAsync(stationId);
       alert("대여가 완료되었습니다.");
     } catch (err) {
@@ -35,9 +51,14 @@ export default function StationDetailPageClient({
 
   const handleReturn = async () => {
     try {
-      // 실제로는 현재 대여 중인 rentalId를 가져와야 함
-      const rentalId = 1; // 임시 값
-      await returnMutation.mutateAsync(rentalId);
+      // 활성 대여가 없으면 반납 불가
+      if (!activeRental) {
+        alert("반납할 자전거가 없습니다.");
+        return;
+      }
+
+      // rentalId로 반납
+      await returnMutation.mutateAsync(activeRental.rentalId);
       alert("반납이 완료되었습니다.");
     } catch (err) {
       alert("반납 실패: " + (err instanceof Error ? err.message : "알 수 없는 오류"));
@@ -60,7 +81,7 @@ export default function StationDetailPageClient({
     }
   };
 
-  if (isLoading) {
+  if (isLoading || rentalsLoading) {
     return (
       <div className="px-4 py-4">
         <div className="text-center py-12 text-gray-500">로딩 중...</div>
@@ -71,12 +92,15 @@ export default function StationDetailPageClient({
   if (error || !station) {
     return (
       <div className="px-4 py-4">
-        <div className="text-center py-12 text-red-500">
-          에러: {error?.message || "대여소를 찾을 수 없습니다."}
-        </div>
+        <div className="text-center py-12 text-red-500">에러: {error?.message || "대여소를 찾을 수 없습니다."}</div>
       </div>
     );
   }
+
+  // 반납 버튼 활성화 여부 (활성 대여가 있을 때만)
+  const canReturn = !!activeRental;
+  // 대여 버튼 활성화 여부 (활성 대여가 없고, 자전거가 있을 때만)
+  const canRent = !activeRental && station && station.availableBikes > 0;
 
   return (
     <>
@@ -90,8 +114,8 @@ export default function StationDetailPageClient({
           latitude: station.latitude,
           longitude: station.longitude,
         }}
-        onRent={handleRent}
-        onReturn={handleReturn}
+        onRent={canRent ? handleRent : undefined}
+        onReturn={canReturn ? handleReturn : undefined}
         onReport={handleReport}
       />
       <StationReportModal
@@ -106,4 +130,3 @@ export default function StationDetailPageClient({
     </>
   );
 }
-

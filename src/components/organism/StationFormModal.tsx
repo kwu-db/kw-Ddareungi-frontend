@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Modal } from "../molecule/Modal";
 import { FormField } from "../molecule/FormField";
 import { Button } from "../atom/Button";
-import {
-  RequestRegisterStation,
-  UpdateStation,
-  ResponseStation,
-} from "@/interfaces/Station";
+import { RequestRegisterStation, UpdateStation, ResponseStation } from "@/interfaces/Station";
+
+// 지도 컴포넌트는 클라이언트 사이드에서만 로드
+const LocationPickerMap = dynamic(() => import("../molecule/LocationPickerMap"), {
+  ssr: false,
+});
 
 interface StationFormModalProps {
   isOpen: boolean;
@@ -26,11 +28,9 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
   mode = "create",
 }) => {
   const [stationName, setStationName] = useState("");
-  const [address, setAddress] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [latitude, setLatitude] = useState<number>(37.5665); // 서울시청 기본 위치
+  const [longitude, setLongitude] = useState<number>(126.978);
   const [capacity, setCapacity] = useState("");
-  const [installationDate, setInstallationDate] = useState("");
   const [closedHour, setClosedHour] = useState("");
   const [closedMinute, setClosedMinute] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,11 +39,9 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
     if (isOpen) {
       if (initialData) {
         setStationName(initialData.stationName);
-        setAddress(initialData.address);
-        setLatitude(initialData.latitude.toString());
-        setLongitude(initialData.longitude.toString());
+        setLatitude(initialData.latitude);
+        setLongitude(initialData.longitude);
         setCapacity(initialData.capacity.toString());
-        setInstallationDate(initialData.installationDate);
         if (initialData.closedDate) {
           setClosedHour(initialData.closedDate.hour.toString());
           setClosedMinute(initialData.closedDate.minute.toString());
@@ -53,20 +51,23 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
         }
       } else {
         setStationName("");
-        setAddress("");
-        setLatitude("");
-        setLongitude("");
+        setLatitude(37.5665); // 서울시청 기본 위치
+        setLongitude(126.978);
         setCapacity("");
-        setInstallationDate(new Date().toISOString().split("T")[0]);
         setClosedHour("");
         setClosedMinute("");
       }
     }
   }, [isOpen, initialData]);
 
+  const handleLocationChange = (lat: number, lng: number) => {
+    setLatitude(lat);
+    setLongitude(lng);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stationName.trim() || !address.trim() || !latitude || !longitude || !capacity) {
+    if (!stationName.trim() || !latitude || !longitude || !capacity) {
       alert("필수 항목을 모두 입력해주세요.");
       return;
     }
@@ -75,11 +76,11 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
     try {
       const baseData: any = {
         stationName,
-        address,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
+        latitude,
+        longitude,
+        address: "", // 주소는 지도에서 선택한 위치로 대체
         capacity: parseInt(capacity),
-        installationDate,
+        installationDate: "", // 서버에서 자동 처리
       };
 
       if (closedHour && closedMinute) {
@@ -121,27 +122,25 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
           <FormField
             label="대여소 이름"
             value={stationName}
-            onChange={(e) => setStationName(e.target.value)}
+            onChange={e => setStationName(e.target.value)}
             placeholder="대여소 이름을 입력하세요"
             required
           />
         </div>
         <div className="mb-4">
-          <FormField
-            label="주소"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="주소를 입력하세요"
-            required
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            위치 선택 <span className="text-red-500">*</span>
+          </label>
+          <p className="text-xs text-gray-500 mb-2">지도를 클릭하여 대여소 위치를 선택하세요</p>
+          <LocationPickerMap latitude={latitude} longitude={longitude} onLocationChange={handleLocationChange} />
         </div>
         <div className="mb-4 grid grid-cols-2 gap-4">
           <FormField
             label="위도"
             type="number"
             step="any"
-            value={latitude}
-            onChange={(e) => setLatitude(e.target.value)}
+            value={latitude.toString()}
+            onChange={e => setLatitude(parseFloat(e.target.value) || 0)}
             placeholder="위도"
             required
           />
@@ -149,8 +148,8 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
             label="경도"
             type="number"
             step="any"
-            value={longitude}
-            onChange={(e) => setLongitude(e.target.value)}
+            value={longitude.toString()}
+            onChange={e => setLongitude(parseFloat(e.target.value) || 0)}
             placeholder="경도"
             required
           />
@@ -160,31 +159,20 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
             label="수용 대수"
             type="number"
             value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
+            onChange={e => setCapacity(e.target.value)}
             placeholder="수용 대수"
             required
             min="1"
           />
         </div>
         <div className="mb-4">
-          <FormField
-            label="설치일"
-            type="date"
-            value={installationDate}
-            onChange={(e) => setInstallationDate(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            마감 시간 (선택)
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">마감 시간 (선택)</label>
           <div className="grid grid-cols-2 gap-4">
             <FormField
               label="시"
               type="number"
               value={closedHour}
-              onChange={(e) => setClosedHour(e.target.value)}
+              onChange={e => setClosedHour(e.target.value)}
               placeholder="시"
               min="0"
               max="23"
@@ -193,7 +181,7 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
               label="분"
               type="number"
               value={closedMinute}
-              onChange={(e) => setClosedMinute(e.target.value)}
+              onChange={e => setClosedMinute(e.target.value)}
               placeholder="분"
               min="0"
               max="59"
@@ -204,6 +192,3 @@ export const StationFormModal: React.FC<StationFormModalProps> = ({
     </Modal>
   );
 };
-
-
-

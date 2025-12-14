@@ -131,9 +131,9 @@ export default function AdminStationsPageClient() {
   return (
     <div className="px-4 py-4">
       <div className="mb-4 space-y-2">
-        <Button fullWidth onClick={handleCreateClick}>
+        {/* <Button fullWidth onClick={handleCreateClick}>
           대여소 등록
-        </Button>
+        </Button> */}
         <Button fullWidth variant="outline" onClick={handleSync} disabled={syncStationsMutation.isPending}>
           {syncStationsMutation.isPending ? "동기화 중..." : "따릉이 데이터 동기화"}
         </Button>

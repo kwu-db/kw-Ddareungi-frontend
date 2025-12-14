@@ -80,7 +80,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 통계 대시보드
               </Button>
             </Link>
-            <Link href="/reports">
+            <Link href="/admin/reports">
               <Button fullWidth variant="outline">
                 신고 관리
               </Button>

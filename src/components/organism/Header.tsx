@@ -14,11 +14,14 @@ export const Header: React.FC<HeaderProps> = ({
   rightAction,
 }) => {
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-      <div className="flex items-center justify-between px-4 py-3 max-w-[428px] mx-auto">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200/80 shadow-sm">
+      <div className="flex items-center justify-between px-5 py-3.5 max-w-[428px] mx-auto">
         <div className="flex items-center gap-3">
           {showBack && (
-            <Link href="/" className="text-gray-600 hover:text-gray-900">
+            <Link 
+              href="/" 
+              className="text-gray-600 hover:text-gray-900 active:opacity-70 transition-opacity p-1 -ml-1"
+            >
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -28,21 +31,21 @@ export const Header: React.FC<HeaderProps> = ({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
             </Link>
           )}
           {!showBack ? (
-            <Link href="/">
+            <Link href="/" className="hover:opacity-80 transition-opacity">
               <Logo size="sm" />
             </Link>
           ) : (
-            <span className="text-xl font-bold text-[#00a651]">{title}</span>
+            <span className="text-xl font-bold text-gray-900 tracking-tight">{title}</span>
           )}
         </div>
-        {rightAction && <div>{rightAction}</div>}
+        {rightAction && <div className="flex items-center">{rightAction}</div>}
       </div>
     </header>
   );

@@ -1,18 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { PassList } from "@/components/organism/PassList";
-import { useUserPasses, usePurchasePass } from "@/hooks/usePasses";
+import { PassPurchaseModal } from "@/components/organism/PassPurchaseModal";
+import { useUserPasses } from "@/hooks/usePasses";
 
 export default function PassesPageClient() {
   const { data: userPasses, isLoading, error } = useUserPasses();
-  const purchaseMutation = usePurchasePass();
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   const handlePassClick = (id: number) => {
     alert(`이용권 상세: ${id}`);
   };
 
   const handlePurchaseClick = () => {
-    alert("이용권 구매 기능은 추후 구현 예정입니다.");
+    setIsPurchaseModalOpen(true);
   };
 
   if (isLoading) {
@@ -27,7 +29,7 @@ export default function PassesPageClient() {
     return (
       <div className="px-4 py-4">
         <div className="text-center py-12 text-red-500">
-          에러: {error.message}
+          에러: {error?.message || "알 수 없는 오류"}
         </div>
       </div>
     );
@@ -67,12 +69,18 @@ export default function PassesPageClient() {
     }) || [];
 
   return (
-    <PassList
-      passes={passList}
-      onPassClick={handlePassClick}
-      onPurchaseClick={handlePurchaseClick}
-      showPurchaseButton={true}
-    />
+    <>
+      <PassList
+        passes={passList}
+        onPassClick={handlePassClick}
+        onPurchaseClick={handlePurchaseClick}
+        showPurchaseButton={true}
+      />
+      <PassPurchaseModal
+        isOpen={isPurchaseModalOpen}
+        onClose={() => setIsPurchaseModalOpen(false)}
+      />
+    </>
   );
 }
 

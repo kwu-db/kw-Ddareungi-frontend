@@ -51,72 +51,75 @@ export default function LoginPageClient() {
       });
 
       if (response.status === "success" && response.data) {
-        // 사용자 정보 저장 (이메일을 userId로 임시 사용)
-        if (typeof window !== "undefined") {
-          localStorage.setItem("userEmail", formData.loginId);
-          // TODO: 실제 사용자 ID를 응답에서 가져와야 함
-          localStorage.setItem("userId", "1"); // 임시 값
-        }
-        alert("로그인 성공!");
+        // 사용자 정보는 useLogin 훅에서 이미 저장됨
         router.push("/mypage");
       } else {
         throw new Error(response.message || "로그인 실패");
       }
     } catch (error: any) {
-      alert(
-        "로그인 실패: " + (error?.message || error?.data || "알 수 없는 오류")
-      );
+      const errorMessage = 
+        error?.message || 
+        error?.data?.message || 
+        (typeof error === 'string' ? error : "알 수 없는 오류");
+      alert(`로그인 실패: ${errorMessage}`);
     }
   };
 
   return (
-    <div className="px-4 py-6">
-      <Card className="p-6">
-        <h2 className="text-2xl font-bold mb-6 text-center">로그인</h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField
-            label="이메일"
-            id="loginId"
-            type="email"
-            value={formData.loginId}
-            onChange={(e) =>
-              setFormData({ ...formData, loginId: e.target.value })
-            }
-            error={errors.loginId}
-            required
-          />
-
-          <FormField
-            label="비밀번호"
-            id="password"
-            type="password"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            error={errors.password}
-            required
-          />
-
-          <Button
-            type="submit"
-            fullWidth
-            disabled={loginMutation.isPending}
-          >
-            {loginMutation.isPending ? "로그인 중..." : "로그인"}
-          </Button>
-        </form>
-
-        <div className="mt-4 text-center">
-          <Link
-            href="/signup"
-            className="text-sm text-[#00a651] hover:underline"
-          >
-            회원가입
-          </Link>
+    <div className="px-5 py-8">
+      <div className="max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">로그인</h2>
+          <p className="text-sm text-gray-500">따릉이 서비스에 오신 것을 환영합니다</p>
         </div>
-      </Card>
+
+        <Card className="p-6" variant="elevated">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <FormField
+              label="이메일"
+              id="loginId"
+              type="email"
+              value={formData.loginId}
+              onChange={(e) =>
+                setFormData({ ...formData, loginId: e.target.value })
+              }
+              error={errors.loginId}
+              required
+            />
+
+            <FormField
+              label="비밀번호"
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              error={errors.password}
+              required
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              size="lg"
+              disabled={loginMutation.isPending}
+              className="mt-6"
+            >
+              {loginMutation.isPending ? "로그인 중..." : "로그인"}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <Link
+              href="/signup"
+              className="text-sm text-[#00a651] font-semibold hover:underline"
+            >
+              계정이 없으신가요? 회원가입
+            </Link>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

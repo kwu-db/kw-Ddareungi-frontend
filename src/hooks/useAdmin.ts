@@ -1,11 +1,13 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import adminService from "@/services/adminService";
-import {
-  AdminRequestDto,
-  UpdateAdminRequest,
-} from "@/interfaces/Admin";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import adminService from "@/services/api/adminService";
+import { AdminRequestDto, UpdateAdminRequest } from "@/interfaces/Admin";
+
+interface AdminCheckResponse {
+  isAdmin: boolean;
+  email: string;
+}
 
 /**
  * 관리자 계정 생성 훅
@@ -21,13 +23,30 @@ export function useCreateAdmin() {
  */
 export function useUpdateAdmin() {
   return useMutation({
-    mutationFn: ({
-      adminId,
-      data,
-    }: {
-      adminId: number;
-      data: UpdateAdminRequest;
-    }) => adminService.updateAdmin(adminId, data),
+    mutationFn: ({ adminId, data }: { adminId: number; data: UpdateAdminRequest }) =>
+      adminService.updateAdmin(adminId, data),
   });
 }
 
+/**
+ * 관리자 계정 여부 확인 훅
+ * @param email 확인할 이메일 주소
+ * @param enabled 쿼리 활성화 여부 (기본값: true)
+ */
+export function useCheckAdmin(email: string | null, enabled: boolean = true) {
+  return useQuery<AdminCheckResponse>({
+    queryKey: ["admin", "check", email],
+    queryFn: async () => {
+      if (!email) {
+        throw new Error("이메일이 필요합니다.");
+      }
+      const response = await adminService.checkAdmin(email);
+      if (response.status === "success") {
+        return response.data;
+      }
+      throw new Error(response.message || "관리자 권한 확인 실패");
+    },
+    enabled: enabled && !!email,
+    staleTime: 5 * 60 * 1000, // 5분간 캐시 유지
+  });
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import passService from "@/services/passService";
+import passService from "@/services/api/passService";
 import { ResponsePass, ResponseUserPass } from "@/interfaces/Pass";
 
 // Query Keys
@@ -57,4 +57,3 @@ export function usePurchasePass() {
     },
   });
 }
-

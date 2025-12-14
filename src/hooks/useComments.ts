@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import commentService from "@/services/commentService";
+import commentService from "@/services/api/commentService";
 import { RequestComment } from "@/interfaces/Comment";
 
 // Query Keys
@@ -35,13 +35,8 @@ export function useCreateComment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      boardId,
-      data,
-    }: {
-      boardId: number;
-      data: RequestComment;
-    }) => commentService.createComment(boardId, data),
+    mutationFn: ({ boardId, data }: { boardId: number; data: RequestComment }) =>
+      commentService.createComment(boardId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: commentKeys.list(variables.boardId),
@@ -49,4 +44,3 @@ export function useCreateComment() {
     },
   });
 }
-

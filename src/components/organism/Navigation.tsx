@@ -54,23 +54,27 @@ export const Navigation: React.FC = () => {
   const pathname = usePathname();
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200/80 shadow-lg z-50 safe-area-bottom">
       <div className="max-w-[428px] mx-auto">
-        <div className="flex items-center justify-around px-2 py-2">
+        <div className="flex items-center justify-around px-1 py-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 active:scale-95 ${
                   isActive
-                    ? 'text-[#00a651]'
+                    ? 'text-[#00a651] bg-[#00a651]/5'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {item.icon}
-                <span className="text-xs font-medium">{item.label}</span>
+                <div className={isActive ? 'scale-110' : ''}>
+                  {item.icon}
+                </div>
+                <span className={`text-xs font-semibold ${isActive ? 'text-[#00a651]' : ''}`}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}

@@ -24,3 +24,17 @@ export interface RentalResponseDto {
   createdDate: string;
 }
 
+// 랭킹 관련 인터페이스
+export interface RankingResponseDto {
+  rank: number;
+  userId: number;
+  userName: string;
+  value: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
+export interface RankingListResponseDto {
+  rankings: RankingResponseDto[];
+}

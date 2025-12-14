@@ -1,25 +1,59 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import tokenService from "@/services/tokenService";
+import tokenService from "@/services/api/tokenService";
+import adminService from "@/services/api/adminService";
 import { UserLoginRequest } from "@/interfaces/Token";
+import { saveTokens } from "@/utils/tokenUtils";
+import { useAuthStore } from "@/stores/authStore";
 
 /**
  * 로그인 훅
  */
 export function useLogin() {
+  const setUserInfo = useAuthStore((state) => state.setUserInfo);
+  
   return useMutation({
-    mutationFn: (data: UserLoginRequest) => tokenService.login(data),
-    onSuccess: (response) => {
+    mutationFn: async (data: UserLoginRequest) => {
+      // 1. 로그인 API 호출
+      const loginResponse = await tokenService.login(data);
+      
+      // 2. 로그인 성공 시 사용자 정보 조회
+      if (loginResponse.status === "success" && loginResponse.data) {
+        try {
+          const userInfoResponse = await adminService.getUserInfo(data.loginId);
+          if (userInfoResponse.status === "success" && userInfoResponse.data) {
+            return {
+              ...loginResponse,
+              userInfo: userInfoResponse.data,
+            };
+          }
+        } catch (error) {
+          console.error("Failed to fetch user info:", error);
+          // 사용자 정보 조회 실패해도 로그인은 성공으로 처리
+        }
+      }
+      
+      return loginResponse;
+    },
+    onSuccess: (response, variables) => {
       if (response.status === "success" && response.data) {
-        // 토큰 저장
-        if (typeof window !== "undefined") {
-          localStorage.setItem("accessToken", response.data.accessToken);
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-          localStorage.setItem("role", response.data.role);
-          // TODO: 실제 사용자 ID를 응답에서 가져와야 함
-          // 임시로 이메일을 키로 사용
-          localStorage.setItem("userId", "1"); // 임시 값
+        // 토큰 저장 (만료 시간 포함)
+        saveTokens(
+          response.data.accessToken,
+          response.data.refreshToken,
+          response.data.accessTokenExpire,
+          response.data.refreshTokenExpire,
+          response.data.role
+        );
+        
+        // 사용자 정보 저장 (userInfo가 있으면 사용, 없으면 임시값)
+        if ((response as any).userInfo) {
+          const userInfo = (response as any).userInfo;
+          setUserInfo(String(userInfo.userId), variables.loginId);
+        } else {
+          // 사용자 정보 조회 실패 시 임시값 사용
+          setUserInfo("1", variables.loginId);
         }
       }
     },
@@ -35,11 +69,14 @@ export function useReissueToken() {
       tokenService.reissue(refreshToken),
     onSuccess: (response) => {
       if (response.status === "success" && response.data) {
-        // 토큰 갱신
-        if (typeof window !== "undefined") {
-          localStorage.setItem("accessToken", response.data.accessToken);
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-        }
+        // 토큰 갱신 (만료 시간 포함)
+        saveTokens(
+          response.data.accessToken,
+          response.data.refreshToken,
+          response.data.accessTokenExpire,
+          response.data.refreshTokenExpire,
+          response.data.role
+        );
       }
     },
   });

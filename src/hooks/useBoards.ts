@@ -1,24 +1,15 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import boardService from "@/services/boardService";
-import {
-  BoardInfo,
-  BoardListInfo,
-  CreateBoard,
-  UpdateBoard,
-  Pageable,
-} from "@/interfaces/Board";
+import boardService from "@/services/api/boardService";
+import { BoardInfo, BoardListInfo, CreateBoard, UpdateBoard, Pageable } from "@/interfaces/Board";
 
 // Query Keys
 export const boardKeys = {
   all: ["boards"] as const,
   lists: () => [...boardKeys.all, "list"] as const,
-  list: (filters?: {
-    pageable?: Pageable;
-    boardType?: string;
-    keyword?: string;
-  }) => [...boardKeys.lists(), filters] as const,
+  list: (filters?: { pageable?: Pageable; boardType?: string; keyword?: string }) =>
+    [...boardKeys.lists(), filters] as const,
   details: () => [...boardKeys.all, "detail"] as const,
   detail: (id: number) => [...boardKeys.details(), id] as const,
 };
@@ -29,7 +20,8 @@ export const boardKeys = {
 export function useBoards(
   pageable?: Pageable,
   boardType?: string,
-  keyword?: string
+  keyword?: string,
+  enabled: boolean = true
 ) {
   return useQuery({
     queryKey: boardKeys.list({ pageable, boardType, keyword }),
@@ -40,6 +32,7 @@ export function useBoards(
       }
       throw new Error(response.message || "게시글 목록 조회 실패");
     },
+    enabled,
   });
 }
 
@@ -81,8 +74,7 @@ export function useUpdateBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ boardId, data }: { boardId: number; data: UpdateBoard }) =>
-      boardService.updateBoard(boardId, data),
+    mutationFn: ({ boardId, data }: { boardId: number; data: UpdateBoard }) => boardService.updateBoard(boardId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: boardKeys.lists() });
       queryClient.invalidateQueries({
@@ -105,4 +97,3 @@ export function useDeleteBoard() {
     },
   });
 }
-

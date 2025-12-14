@@ -13,10 +13,8 @@ export default function AdminPageClient() {
     totalStations: stations?.length || 0,
     totalUsers: 0, // API 없음
     pendingReports: 0, // API 없음
-    activeRentals:
-      rentals?.filter((rental) => !rental.endTime).length || 0,
+    activeRentals: rentals?.filter(rental => !rental.endTime || rental.status === "ACTIVE").length || 0,
   };
 
   return <AdminDashboard stats={stats} />;
 }
-

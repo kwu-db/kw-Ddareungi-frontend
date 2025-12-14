@@ -17,9 +17,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   rightAction,
 }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
       <Header title={title} showBack={showBack} rightAction={rightAction} />
-      <main className="flex-1 pb-20 max-w-[428px] w-full mx-auto">
+      <main className="flex-1 pb-24 max-w-[428px] w-full mx-auto">
         {children}
       </main>
       <Navigation />

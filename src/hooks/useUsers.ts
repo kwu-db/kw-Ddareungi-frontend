@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import userService from "@/services/userService";
+import userService from "@/services/api/userService";
 import { CreateUser } from "@/interfaces/User";
 
 /**
@@ -12,4 +12,3 @@ export function useCreateUser() {
     mutationFn: (data: CreateUser) => userService.createUser(data),
   });
 }
-

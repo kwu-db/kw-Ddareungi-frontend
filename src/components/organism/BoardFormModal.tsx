@@ -27,19 +27,19 @@ export const BoardFormModal: React.FC<BoardFormModalProps> = ({
 }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [boardType, setBoardType] = useState<BoardType>("QNA");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // 게시글 타입을 "문의"로 고정
+  const boardType: BoardType = "QNA";
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
         setTitle(initialData.title);
         setContent(initialData.content);
-        setBoardType(initialData.boardType);
       } else {
         setTitle("");
         setContent("");
-        setBoardType("QNA");
       }
     }
   }, [isOpen, initialData]);
@@ -83,24 +83,7 @@ export const BoardFormModal: React.FC<BoardFormModalProps> = ({
       }
     >
       <form onSubmit={handleSubmit}>
-        {mode === "create" && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              게시글 타입
-            </label>
-            <select
-              value={boardType}
-              onChange={(e) => setBoardType(e.target.value as BoardType)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00a651]"
-              required
-            >
-              <option value="QNA">문의</option>
-              <option value="NOTICE">공지</option>
-              <option value="REPORT">신고</option>
-            </select>
-          </div>
-        )}
-        <div className="mb-4">
+        <div className="mb-5">
           <FormField
             label="제목"
             value={title}
@@ -109,7 +92,7 @@ export const BoardFormModal: React.FC<BoardFormModalProps> = ({
             required
           />
         </div>
-        <div className="mb-4">
+        <div className="mb-5">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             내용
           </label>
@@ -118,7 +101,7 @@ export const BoardFormModal: React.FC<BoardFormModalProps> = ({
             onChange={(e) => setContent(e.target.value)}
             placeholder="내용을 입력하세요"
             rows={8}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00a651] resize-none"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00a651]/20 focus:border-[#00a651] resize-none transition-all bg-white text-gray-900 placeholder:text-gray-400"
             required
           />
         </div>
@@ -126,4 +109,6 @@ export const BoardFormModal: React.FC<BoardFormModalProps> = ({
     </Modal>
   );
 };
+
+
 

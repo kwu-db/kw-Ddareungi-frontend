@@ -76,10 +76,11 @@ export default function SignupPageClient() {
     } catch (error: any) {
       const errorMessage =
         error?.message ||
-        error?.data ||
+        error?.data?.message ||
+        (typeof error?.data === 'string' ? error.data : null) ||
         error?.response?.data?.message ||
-        "알 수 없는 오류";
-      alert("회원가입 실패: " + errorMessage);
+        (typeof error === 'string' ? error : "알 수 없는 오류");
+      alert(`회원가입 실패: ${errorMessage}`);
     }
   };
 

@@ -1,12 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import stationService from "@/services/stationService";
-import {
-  ResponseStation,
-  RequestRegisterStation,
-  UpdateStation,
-} from "@/interfaces/Station";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import stationService from "@/services/api/stationService";
+import { ResponseStation, RequestRegisterStation, UpdateStation, PageResponseStation } from "@/interfaces/Station";
 
 // Query Keys
 export const stationKeys = {
@@ -18,18 +14,49 @@ export const stationKeys = {
 };
 
 /**
- * 대여소 목록 조회 훅
+ * 대여소 목록 조회 훅 (일반 쿼리)
  */
-export function useStations() {
+export function useStations(search?: string, pageable?: { page?: number; size?: number; sort?: string[] }) {
   return useQuery({
-    queryKey: stationKeys.lists(),
+    queryKey: [...stationKeys.lists(), search, pageable],
     queryFn: async () => {
-      const response = await stationService.getStations();
+      const response = await stationService.getStations(search, pageable);
       if (response.status === "success") {
-        return response.data.stationList;
+        // 페이지네이션 응답에서 content 배열 반환
+        return response.data.content;
       }
       throw new Error(response.message || "대여소 목록 조회 실패");
     },
+  });
+}
+
+/**
+ * 대여소 목록 무한 스크롤 훅
+ */
+export function useInfiniteStations(
+  search?: string,
+  pageSize: number = 20
+) {
+  return useInfiniteQuery({
+    queryKey: [...stationKeys.lists(), "infinite", search, pageSize],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await stationService.getStations(search, {
+        page: pageParam,
+        size: pageSize,
+      });
+      if (response.status === "success") {
+        return response.data;
+      }
+      throw new Error(response.message || "대여소 목록 조회 실패");
+    },
+    getNextPageParam: (lastPage: PageResponseStation) => {
+      // 마지막 페이지가 아니면 다음 페이지 번호 반환
+      if (!lastPage.last && lastPage.number < lastPage.totalPages - 1) {
+        return lastPage.number + 1;
+      }
+      return undefined; // 더 이상 페이지가 없으면 undefined
+    },
+    initialPageParam: 0,
   });
 }
 
@@ -57,10 +84,10 @@ export function useCreateStation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: RequestRegisterStation) =>
-      stationService.createStation(data),
+    mutationFn: (data: RequestRegisterStation) => stationService.createStation(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: stationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: [...stationKeys.lists(), "infinite"] });
     },
   });
 }
@@ -72,15 +99,11 @@ export function useUpdateStation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      stationId,
-      data,
-    }: {
-      stationId: number;
-      data: UpdateStation;
-    }) => stationService.updateStation(stationId, data),
+    mutationFn: ({ stationId, data }: { stationId: number; data: UpdateStation }) =>
+      stationService.updateStation(stationId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: stationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: [...stationKeys.lists(), "infinite"] });
       queryClient.invalidateQueries({
         queryKey: stationKeys.detail(variables.stationId),
       });
@@ -95,10 +118,25 @@ export function useDeleteStation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (stationId: number) =>
-      stationService.deleteStation(stationId),
+    mutationFn: (stationId: number) => stationService.deleteStation(stationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: stationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: [...stationKeys.lists(), "infinite"] });
+    },
+  });
+}
+
+/**
+ * 대여소 동기화 훅
+ */
+export function useSyncStations() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => stationService.syncStations(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: stationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: [...stationKeys.lists(), "infinite"] });
     },
   });
 }
